@@ -31,9 +31,11 @@ type Potion struct {
 }
 
 type Game struct {
-	player  *Player
-	enemies []*Enemy
-	potions []*Potion
+	player      *Player
+	enemies     []*Enemy
+	potions     []*Potion
+	tilemapJSON *TilemapJSON
+	tilemapImg  *ebiten.Image
 }
 
 // note for the key cortesen the y axis is inverted
@@ -101,6 +103,37 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		screen.DrawImage(potion.Img.SubImage(image.Rect(0, 0, 16, 16)).(*ebiten.Image), &opts)
 		opts.GeoM.Reset()
 	}
+
+	// drawing the map layers
+	for _, layer := range g.tilemapJSON.Layers {
+		// index is the position in the array and id is the value
+		for index, id := range layer.Data {
+			// get the position of the tile
+			x := index % layer.Width
+			y := index / layer.Width
+
+			// give the pixle position of the tile
+			x *= 16
+			y *= 16
+
+			// grabbing the source from tileset_floor.png
+			srcX := (id - 1) % 22
+			srcY := (id - 1) / 22
+
+			srcX *= 16
+			srcY *= 16
+
+			opts := ebiten.DrawImageOptions{}
+			opts.GeoM.Translate(float64(x), float64(y))
+
+			screen.DrawImage(
+				g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+16, srcY+16)).(*ebiten.Image),
+				&opts,
+			)
+			opts.GeoM.Reset()
+		}
+	}
+
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -119,6 +152,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// loading the json file for the tile map
+	tileMapJson, err := NewTilemapJSON("assets/maps/spawn.json")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//next we want to load the tile set image
+	tileSetImg, _, err := ebitenutil.NewImageFromFile("assets/images/tileset_floor.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	game := &Game{
 		player: &Player{
 			Sprite: &Sprite{
@@ -156,6 +203,8 @@ func main() {
 				1.0,
 			},
 		},
+		tilemapJSON: tileMapJson,
+		tilemapImg:  tileSetImg,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {
