@@ -83,8 +83,38 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{120, 180, 255, 255})
-	// draw our player
+
 	opts := ebiten.DrawImageOptions{}
+
+	// drawing the map layers
+	for _, layer := range g.tilemapJSON.Layers {
+		// index is the position in the array and id is the value
+		for index, id := range layer.Data {
+			// get the position of the tile
+			x := index % layer.Width
+			y := index / layer.Width
+
+			// give the pixle position of the tile
+			x *= 16
+			y *= 16
+
+			// grabbing the image from the tileset_floor.png
+			srcX := (id - 1) % 22
+			srcY := (id - 1) / 22
+
+			srcX *= 16
+			srcY *= 16
+
+			opts.GeoM.Translate(float64(x), float64(y))
+
+			screen.DrawImage(
+				g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+16, srcY+16)).(*ebiten.Image),
+				&opts,
+			)
+			opts.GeoM.Reset()
+		}
+	}
+	// draw our player
 	opts.GeoM.Translate(g.player.X, g.player.Y)
 	// the coordinates of the image of the player that you want to draw
 	screen.DrawImage(g.player.Img.SubImage(image.Rect(0, 0, 16, 16)).(*ebiten.Image), &opts)
@@ -104,36 +134,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		opts.GeoM.Reset()
 	}
 
-	// drawing the map layers
-	for _, layer := range g.tilemapJSON.Layers {
-		// index is the position in the array and id is the value
-		for index, id := range layer.Data {
-			// get the position of the tile
-			x := index % layer.Width
-			y := index / layer.Width
-
-			// give the pixle position of the tile
-			x *= 16
-			y *= 16
-
-			// grabbing the source from tileset_floor.png
-			srcX := (id - 1) % 22
-			srcY := (id - 1) / 22
-
-			srcX *= 16
-			srcY *= 16
-
-			opts := ebiten.DrawImageOptions{}
-			opts.GeoM.Translate(float64(x), float64(y))
-
-			screen.DrawImage(
-				g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+16, srcY+16)).(*ebiten.Image),
-				&opts,
-			)
-			opts.GeoM.Reset()
-		}
-	}
-
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -141,7 +141,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowSize(500, 500)
 	ebiten.SetWindowTitle("Hello, World!")
 	// allowing the window to resize on the screen
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
