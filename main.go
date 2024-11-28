@@ -87,6 +87,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	opts := ebiten.DrawImageOptions{}
 
 	// drawing the map layers
+	// loop over the layers array
 	for _, layer := range g.tilemapJSON.Layers {
 		// index is the position in the array and id is the value
 		for index, id := range layer.Data {
@@ -94,23 +95,28 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			x := index % layer.Width
 			y := index / layer.Width
 
-			// give the pixle position of the tile
+			// convert the tile position to the pixel position
 			x *= 16
 			y *= 16
 
-			// grabbing the image from the tileset_floor.png
+			// grabbing the position of the image where the tile id is in relation to tileset_floor.png
 			srcX := (id - 1) % 22
 			srcY := (id - 1) / 22
 
+			// convert the src tile position of the image to pixel src position
 			srcX *= 16
 			srcY *= 16
 
+			// set the draw image options to draw the tile at x,y
 			opts.GeoM.Translate(float64(x), float64(y))
 
+			// draw the tile
 			screen.DrawImage(
+				// cropping out the tile that we want from the src spreadsheet - tileset_floor.png
 				g.tilemapImg.SubImage(image.Rect(srcX, srcY, srcX+16, srcY+16)).(*ebiten.Image),
 				&opts,
 			)
+			// reset the opts for the next tile
 			opts.GeoM.Reset()
 		}
 	}
