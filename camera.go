@@ -16,7 +16,7 @@ func (c *Camera) FollowTarget(targetX, targetY, screenWidth, screenHeight float6
 }
 
 func (c *Camera) Constrain(tilemapWidthPixels, tilemapHeightPixels, screenWidth, screenHeight float64) {
-	// constrains the map to the 0,0 axis coordiante the screenf
+	// constrains the map to the 0,0 axis coordiante the screen
 	c.X = math.Min(c.X, 0.0)
 	c.Y = math.Min(c.Y, 0.0)
 
